@@ -11,7 +11,7 @@ async function postNew(req, res) {
   }
   const existingUser = await dbClient.db.collection('users').findOne({ email });
   if (existingUser) {
-    return res.status(400).json({ error: 'Email already exists' });
+    return res.status(400).json({ error: 'Already exists' });
   }
   const hashedPassword = sha1(password);
   const newUser = {
