@@ -77,33 +77,38 @@ async function postUpload(req, res) {
 }
 
 async function getShow(req, res) {
-  const token = req.header('X-Token');
-  const key = `auth_${token}`;
-  const userId = await redisClient.get(key);
-  if (!userId) {
-    return res.status(401).json({ error: 'Unauthorized' });
-  }
-  const fileId = req.params.id;
-  const file = await dbClient.db.collection('files').findOne({ _id: ObjectId(fileId), userId: ObjectId(userId) });
-  if (!file) return res.status(404).json({ error: 'Not found' });
-  return res.json(file);
+ const token = req.header('X-Token');
+ if (!token) return res.status(401).json({ error: 'Unauthorized' });
+
+ const key = `auth_${token}`;
+ const userIdString = await redisClient.get(key);
+ if (!userIdString) return res.status(401).json({ error: 'Unauthorized' });
+
+ const userId = ObjectId(userIdString);
+ const fileId = req.params.id;
+ const file = await dbClient.db.collection('files').findOne({ _id: ObjectId(fileId), userId });
+
+ if (!file) return res.status(404).json({ error: 'Not found' });
+
+ return res.json(file);
 }
 
 async function getIndex(req, res) {
-  const token = req.header('X-Token');
-  const key = `auth_${token}`;
-  const userId = await redisClient.get(key);
-  if (!userId) {
-    return res.status(401).json({ error: 'Unauthorized' });
-  }
-  const parentId = ObjectId(req.query.parentId) || 0;
-  const page = parseInt(req.query.page, 10) || 0;
-  const itemsPerPage = 20;
-  const query = { userId: req.user.id, parentId };
+ const token = req.header('X-Token');
+ if (!token) return res.status(401).json({ error: 'Unauthorized' });
 
-  const pipeline = [
+ const key = `auth_${token}`;
+ const userIdString = await redisClient.get(key);
+ if (!userIdString) return res.status(401).json({ error: 'Unauthorized' });
+
+ const userId = ObjectId(userIdString);
+ const parentId = req.query.parentId ? ObjectId(req.query.parentId) : '0';
+ const page = parseInt(req.query.page, 10) || 0;
+ const itemsPerPage = 20;
+
+ const pipeline = [
     {
-      $match: query,
+      $match: { userId, parentId },
     },
     {
       $skip: page * itemsPerPage,
@@ -111,13 +116,15 @@ async function getIndex(req, res) {
     {
       $limit: itemsPerPage,
     },
-  ];
-  const files = await dbClient.db.collection('files').aggregate(pipeline).toArray();
-  const result = files.map(({ _id, ...rest }) => ({
+ ];
+
+ const files = await dbClient.db.collection('files').aggregate(pipeline).toArray();
+ const result = files.map(({ _id, ...rest }) => ({
     ...rest,
     id: _id,
-  }));
-  return res.json(result);
+ }));
+
+ return res.json(result);
 }
 
 module.exports = { postUpload, getIndex, getShow };
