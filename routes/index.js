@@ -4,7 +4,9 @@ const router = express.Router();
 const { getStatus, getStats } = require('../controllers/AppController');
 const { postNew, getMe } = require('../controllers/UsersController');
 const { getConnect, getDisconnect } = require('../controllers/AuthController');
-const { postUpload, getShow, getIndex, putPublish, putUnpublish } = require('../controllers/FilesController');
+const {
+  postUpload, getShow, getIndex, putPublish, putUnpublish,
+} = require('../controllers/FilesController');
 
 router.get('/status', getStatus);
 
