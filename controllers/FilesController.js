@@ -78,13 +78,12 @@ async function postUpload(req, res) {
 
 async function getShow(req, res) {
   const token = req.header('X-Token');
-  if (!token) return res.status(401).json({ error: 'Unauthorized' });
 
   const key = `auth_${token}`;
   const userIdString = await redisClient.get(key);
   if (!userIdString) return res.status(401).json({ error: 'Unauthorized' });
 
-  const userId = ObjectId(userIdString);
+  const userId = new ObjectId(userIdString);
   const fileId = req.params.id;
   const file = await dbClient.db.collection('files').findOne({ _id: ObjectId(fileId), userId });
 
@@ -129,7 +128,6 @@ async function getIndex(req, res) {
 
 async function putPublish(req, res) {
   const token = req.header('X-Token');
-  if (!token) return res.status(401).json({ error: 'Unauthorized' });
 
   const key = `auth_${token}`;
   const userIdString = await redisClient.get(key);
@@ -148,8 +146,6 @@ async function putPublish(req, res) {
 
 async function putUnpublish(req, res) {
   const token = req.header('X-Token');
-  if (!token) return res.status(401).json({ error: 'Unauthorized' });
-
   const key = `auth_${token}`;
   const userIdString = await redisClient.get(key);
   if (!userIdString) return res.status(401).json({ error: 'Unauthorized' });
